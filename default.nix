@@ -2,20 +2,21 @@
 stdenv.mkDerivation rec {
     name = "stanza";
     version = "0.18.22";
+    otherver = builtins.replaceStrings ["."] ["_"] version;
+    nativeBuildInputs = [ unzip ];
 
     src = fetchurl {
-        url = "https://github.com/StanzaOrg/lbstanza/releases/download/${version}/lstanza_${version//./_}.zip";
+        url = "https://github.com/StanzaOrg/lbstanza/releases/download/${version}/lstanza_${otherver}.zip";
         sha256 = "6ec3840567270de6457f0ec1de91deb214d1567a809f7779e0edce1892a7f50a";
     };
     sourceRoot = ".";
-    unpackCmd = "unzip lstanza_${version//./_} .";
 
     dontConfigure = true;
     dontBuild = true;
 
     installPhase = ''
         mkdir -p $out/bin
-        cp -R * 
+        cp -R stanza.proj stanza License.txt bin build compiler core docs examples include pkgs runtime 
         ln -s "$out/stanza" "$out/bin/stanza"
     '';
     preFixup = let
@@ -23,7 +24,7 @@ stdenv.mkDerivation rec {
             stdenv.cc.cc.lib
         ];
     in ''
-        patchelf --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" --set-rpath "${libPath}" $out/stanza
+        patchelf --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" --set-rpath "${libPath}" $out/bin/stanza
     '';
 
     postInstall = ''
